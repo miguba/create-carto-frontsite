@@ -7,7 +7,7 @@ import { basename, join, resolve } from 'node:path';
 import process from 'node:process';
 import * as tar from 'tar';
 
-const STARTER_VERSION = 'v0.1.0';
+const STARTER_VERSION = 'v0.1.1';
 const STARTER_ARCHIVE =
   `https://codeload.github.com/miguba/` +
   `carto-frontsite-single-product-starter/tar.gz/refs/tags/${STARTER_VERSION}`;

@@ -1,10 +1,10 @@
 {
   "name": "create-carto-frontsite",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Create a Carto Frontsite project from an official Starter.",
   "type": "module",
   "bin": {
-    "create-carto-frontsite": "./bin/create-carto-frontsite.js"
+    "create-carto-frontsite": "bin/create-carto-frontsite.js"
   },
   "files": [
     "bin"
