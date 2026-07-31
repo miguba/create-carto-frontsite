@@ -1,0 +1,33 @@
+{
+  "name": "create-carto-frontsite",
+  "version": "0.1.0",
+  "description": "Create a Carto Frontsite project from an official Starter.",
+  "type": "module",
+  "bin": {
+    "create-carto-frontsite": "./bin/create-carto-frontsite.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "scripts": {
+    "check": "node --check bin/create-carto-frontsite.js && node --test",
+    "start": "node bin/create-carto-frontsite.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "carto",
+    "frontsite",
+    "starter",
+    "create"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miguba/create-carto-frontsite.git"
+  },
+  "dependencies": {
+    "tar": "^7.4.3"
+  }
+}
