@@ -5,21 +5,37 @@ import { constants } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import process from 'node:process';
+import { createInterface } from 'node:readline/promises';
 import * as tar from 'tar';
 
-const STARTER_VERSION = 'v0.1.1';
-const STARTER_ARCHIVE =
-  `https://codeload.github.com/miguba/` +
-  `carto-frontsite-single-product-starter/tar.gz/refs/tags/${STARTER_VERSION}`;
+const STARTER_REGISTRY_URL =
+  'https://raw.githubusercontent.com/miguba/create-carto-frontsite/main/starters.json';
 
 function printHelp() {
   console.log(`Create a Carto Frontsite project.
 
 Usage:
-  npm create carto-frontsite@latest <project-name>
+  npm create carto-frontsite@latest <project-name> [-- --template <id>]
 
-Example:
-  npm create carto-frontsite@latest my-store`);
+Examples:
+  npm create carto-frontsite@latest my-store
+  npm create carto-frontsite@latest my-store -- --template single-product`);
+}
+
+function parseArguments(args) {
+  const projectName = args[0];
+  let templateId = '';
+
+  for (let index = 1; index < args.length; index += 1) {
+    if (args[index] === '--template') {
+      templateId = args[index + 1] || '';
+      index += 1;
+      continue;
+    }
+    throw new Error(`Unknown option: ${args[index]}`);
+  }
+
+  return { projectName, templateId };
 }
 
 function validPackageName(value) {
@@ -39,6 +55,59 @@ async function pathExists(path) {
   }
 }
 
+async function loadStarters() {
+  const response = await fetch(STARTER_REGISTRY_URL, {
+    headers: { 'User-Agent': 'create-carto-frontsite' },
+  });
+  if (!response.ok) {
+    throw new Error(`Starter registry request failed: HTTP ${response.status}`);
+  }
+
+  const registry = await response.json();
+  if (registry?.schemaVersion !== 1 || !Array.isArray(registry.starters)) {
+    throw new Error('The Starter registry has an unsupported format.');
+  }
+
+  const starters = registry.starters.filter(
+    (starter) =>
+      typeof starter?.id === 'string' &&
+      typeof starter?.name === 'string' &&
+      /^[\w.-]+\/[\w.-]+$/.test(starter?.repository) &&
+      /^[\w./-]+$/.test(starter?.version),
+  );
+  if (!starters.length) throw new Error('No Carto Frontsite Starters are available.');
+  return starters;
+}
+
+async function selectStarter(starters, requestedId) {
+  if (requestedId) {
+    const selected = starters.find((starter) => starter.id === requestedId);
+    if (!selected) {
+      throw new Error(
+        `Unknown Starter "${requestedId}". Available: ${starters.map(({ id }) => id).join(', ')}`,
+      );
+    }
+    return selected;
+  }
+
+  if (starters.length === 1) return starters[0];
+  if (!process.stdin.isTTY) {
+    throw new Error('Multiple Starters are available. Choose one with --template <id>.');
+  }
+
+  console.log('\nAvailable Starters:');
+  starters.forEach((starter, index) => {
+    console.log(`  ${index + 1}. ${starter.name} (${starter.id})`);
+  });
+
+  const prompt = createInterface({ input: process.stdin, output: process.stdout });
+  const answer = await prompt.question('\nSelect a Starter: ');
+  prompt.close();
+  const selected = starters[Number.parseInt(answer, 10) - 1];
+  if (!selected) throw new Error('Please select a valid Starter number.');
+  return selected;
+}
+
 async function main() {
   const argument = process.argv[2];
   if (!argument || argument === '--help' || argument === '-h') {
@@ -47,7 +116,11 @@ async function main() {
     return;
   }
 
-  const target = resolve(argument);
+  const { projectName: projectArgument, templateId } = parseArguments(
+    process.argv.slice(2),
+  );
+
+  const target = resolve(projectArgument);
   const projectName = validPackageName(basename(target));
   if (!projectName) throw new Error('Please use a valid project name.');
 
@@ -61,8 +134,10 @@ async function main() {
   let createdTarget = false;
 
   try {
-    console.log(`Downloading Carto Frontsite Starter ${STARTER_VERSION}...`);
-    const response = await fetch(STARTER_ARCHIVE, {
+    const starter = await selectStarter(await loadStarters(), templateId);
+    const archiveUrl = `https://codeload.github.com/${starter.repository}/tar.gz/refs/tags/${starter.version}`;
+    console.log(`Downloading ${starter.name} ${starter.version}...`);
+    const response = await fetch(archiveUrl, {
       headers: { 'User-Agent': 'create-carto-frontsite' },
     });
     if (!response.ok) {
@@ -84,7 +159,7 @@ async function main() {
     await writeFile(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
 
     console.log(`\nCreated ${projectName} in ${target}\n`);
-    console.log(`Next steps:\n  cd ${argument}\n  npm install\n  cp .env.example .env\n  npm run dev`);
+    console.log(`Next steps:\n  cd ${projectArgument}\n  npm install\n  cp .env.example .env\n  npm run dev`);
   } catch (error) {
     if (createdTarget) await rm(target, { recursive: true, force: true });
     throw error;

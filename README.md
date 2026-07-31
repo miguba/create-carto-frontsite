@@ -6,7 +6,13 @@ Create a standalone storefront backed by the Carto Private Commerce API.
 npm create carto-frontsite@latest my-store
 ```
 
-The command downloads the official
+To select a Starter explicitly:
+
+```sh
+npm create carto-frontsite@latest my-store -- --template single-product
+```
+
+The command reads the current Starter catalog from `starters.json` and downloads the official
 [`carto-frontsite-single-product-starter`](https://github.com/miguba/carto-frontsite-single-product-starter)
 release without requiring Git. The generated source belongs to the user and
 can be customized and deployed independently.
