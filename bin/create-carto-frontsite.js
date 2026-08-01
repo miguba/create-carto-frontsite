@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
@@ -101,8 +101,12 @@ async function selectStarter(starters, requestedId) {
   });
 
   const prompt = createInterface({ input: process.stdin, output: process.stdout });
-  const answer = await prompt.question('\nSelect a Starter: ');
-  prompt.close();
+  let answer;
+  try {
+    answer = await prompt.question('\nSelect a Starter: ');
+  } finally {
+    prompt.close();
+  }
   const selected = starters[Number.parseInt(answer, 10) - 1];
   if (!selected) throw new Error('Please select a valid Starter number.');
   return selected;
@@ -125,8 +129,13 @@ async function main() {
   if (!projectName) throw new Error('Please use a valid project name.');
 
   const targetExists = await pathExists(target);
-  if (targetExists && (await readdir(target)).length > 0) {
-    throw new Error(`Target directory is not empty: ${target}`);
+  if (targetExists) {
+    if (!(await stat(target)).isDirectory()) {
+      throw new Error(`Target path is not a directory: ${target}`);
+    }
+    if ((await readdir(target)).length > 0) {
+      throw new Error(`Target directory is not empty: ${target}`);
+    }
   }
 
   const temporaryDirectory = await mkdtemp(join(tmpdir(), 'carto-frontsite-'));

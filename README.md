@@ -6,6 +6,13 @@ Create a standalone storefront backed by the Carto Private Commerce API.
 npm create carto-frontsite@latest my-store
 ```
 
+The same command works in macOS/Linux terminals, Windows PowerShell, and Command Prompt.
+Project paths may contain spaces or non-ASCII characters; quote a path that contains spaces:
+
+```powershell
+npm create carto-frontsite@latest "C:\Users\me\My Store"
+```
+
 To select a Starter explicitly:
 
 ```sh
@@ -23,3 +30,5 @@ can be customized and deployed independently.
 npm install
 node bin/create-carto-frontsite.js ../my-store
 ```
+
+The test suite runs on Windows, macOS, and Linux in CI with Node.js 20, 22, and 24.
