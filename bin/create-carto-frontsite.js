@@ -159,7 +159,7 @@ async function main() {
     await writeFile(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
 
     console.log(`\nCreated ${projectName} in ${target}\n`);
-    console.log(`Next steps:\n  cd ${projectArgument}\n  npm install\n  cp .env.example .env\n  npm run dev`);
+    console.log(`Next steps:\n  cd ${projectArgument}\n  npm install\n  npx carto-kit@latest connect\n  npm run dev`);
   } catch (error) {
     if (createdTarget) await rm(target, { recursive: true, force: true });
     throw error;
